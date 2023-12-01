@@ -8,6 +8,16 @@ import { PlayerCoupon } from './entities/PlayerCoupon';
 
 dotenvConfig({ path: '.env' });
 
+const testConfig = {
+  database: `${process.env.TYPEORM_TEST_DATABASE}`
+};
+
+export const typeOrmConfig = () => {
+  const env = process.env.NODE_ENV;
+
+  return env === 'test' ? testConfig : {};
+}
+
 const config = {
   type: 'mysql',
   host: `${process.env.TYPEORM_HOST}`,
@@ -19,6 +29,7 @@ const config = {
   migrations: process.env.typeorm === 'true' ? ['migrations/*.ts'] : [],
   autoLoadEntities: true,
   synchronize: false,
+  ...typeOrmConfig()
 };
 
 export default registerAs('typeorm', () => config);

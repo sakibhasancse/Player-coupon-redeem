@@ -1,10 +1,12 @@
+import { createConnection } from 'typeorm';
+import { config as dotenvConfig } from 'dotenv';
+
 import { Coupon } from 'src/entities/Coupon';
 import { Player } from 'src/entities/Player';
 import { PlayerCoupon } from 'src/entities/PlayerCoupon';
 import { Reward } from 'src/entities/Reward';
-import { createConnection } from 'typeorm';
 import { coupons, players, rewards } from './data';
-import { config as dotenvConfig } from 'dotenv';
+
 dotenvConfig({ path: '.env' });
 
 async function seed() {
@@ -18,8 +20,9 @@ async function seed() {
     database: process.env.TYPEORM_DATABASE,
     entities: [Player, Reward, Coupon, PlayerCoupon],
     // autoLoadEntities: true,
-    synchronize: false,
+    synchronize: false
   });
+
   console.log("===> Successfully connected database")
   const playerRepository = connection.getRepository(Player);
   await playerRepository.save(players);
@@ -30,8 +33,8 @@ async function seed() {
   const couponRepository = connection.getRepository(Coupon);
   await couponRepository.save(coupons);
 
-  console.log("===> Successfully seeded database")
-  await connection.close(); // Close connection after seeding data
+  console.log("===> Successfully seeded data")
+  await connection.close();
 
 }
 
