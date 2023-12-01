@@ -36,13 +36,9 @@ export class CouponService implements ICouponService {
       throw new BadRequestException('Player not found');
     }
 
-    const usedCouponIds = (await this.playerCouponRepository.find({
-      relations: ['coupon']
-    })).map(pc => pc?.coupon?.id)
-
     const coupon = await this.couponRepository.findOne({
       where: {
-        id: Not(In(usedCouponIds)),
+        id: Not(In(await this.getUsedCouponIds())),
         Reward: reward,
       },
       relations: ['Reward'],
@@ -94,5 +90,10 @@ export class CouponService implements ICouponService {
       value: coupon.value,
       Reward: coupon.Reward
     };
+  }
+
+  private async getUsedCouponIds(): Promise<number[]> {
+    const usedCoupons = await this.playerCouponRepository.find({ relations: ['coupon'] });
+    return usedCoupons.map(pc => pc?.coupon?.id || 0);
   }
 }
