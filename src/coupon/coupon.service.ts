@@ -26,15 +26,11 @@ export class CouponService implements ICouponService {
     const { playerId, rewardId } = parmas
     const reward = await this.rewardRepository.findOne({ where: { id: rewardId } });
 
-    if (!reward) {
-      throw new BadRequestException('Reward not found');
-    }
+    if (!reward) throw new BadRequestException('Reward not found');
 
     const player = await this.PlayerRepository.findOne({ where: { id: playerId } });
 
-    if (!player) {
-      throw new BadRequestException('Player not found');
-    }
+    if (!player) throw new BadRequestException('Player not found');
 
     const coupon = await this.couponRepository.findOne({
       where: {
@@ -48,17 +44,14 @@ export class CouponService implements ICouponService {
       throw new BadRequestException('Coupon not found for this reward');
     }
 
-    const startOfDay = new Date();
-    startOfDay.setHours(0, 0, 0, 0);
+    const startOfDay = new Date(new Date().setHours(0, 0, 0, 0))
     const currentDate = new Date();
 
 
-    if (coupon.Reward.endDate < currentDate) {
-      throw new BadRequestException('Reward is outdated');
-    }
-    if (coupon.Reward.startDate > currentDate) {
-      throw new BadRequestException('Reward is not started yet');
-    }
+    if (coupon.Reward.endDate < currentDate) throw new BadRequestException('Reward is outdated');
+
+    if (coupon.Reward.startDate > currentDate) throw new BadRequestException('Reward is not started yet');
+
 
     const playerCouponsRedeemedToday = await this.playerCouponRepository.count({
       where: {
