@@ -26,23 +26,15 @@ export class CouponService implements ICouponService {
     const { playerId, rewardId } = parmas
     const reward = await this.rewardRepository.findOne({ where: { id: rewardId } });
 
-    if (!reward) {
-      throw new BadRequestException('Reward not found');
-    }
+    if (!reward) throw new BadRequestException('Reward not found');
 
     const player = await this.PlayerRepository.findOne({ where: { id: playerId } });
 
-    if (!player) {
-      throw new BadRequestException('Player not found');
-    }
-
-    const usedCouponIds = (await this.playerCouponRepository.find({
-      relations: ['coupon']
-    })).map(pc => pc?.coupon?.id)
+    if (!player) throw new BadRequestException('Player not found');
 
     const coupon = await this.couponRepository.findOne({
       where: {
-        id: Not(In(usedCouponIds)),
+        id: Not(In(await this.getUsedCouponIds())),
         Reward: reward,
       },
       relations: ['Reward'],
@@ -52,17 +44,14 @@ export class CouponService implements ICouponService {
       throw new BadRequestException('Coupon not found for this reward');
     }
 
-    const startOfDay = new Date();
-    startOfDay.setHours(0, 0, 0, 0);
+    const startOfDay = new Date(new Date().setHours(0, 0, 0, 0))
     const currentDate = new Date();
 
 
-    if (coupon.Reward.endDate < currentDate) {
-      throw new BadRequestException('Reward is outdated');
-    }
-    if (coupon.Reward.startDate > currentDate) {
-      throw new BadRequestException('Reward is not started yet');
-    }
+    if (coupon.Reward.endDate < currentDate) throw new BadRequestException('Reward is outdated');
+
+    if (coupon.Reward.startDate > currentDate) throw new BadRequestException('Reward is not started yet');
+
 
     const playerCouponsRedeemedToday = await this.playerCouponRepository.count({
       where: {
@@ -94,5 +83,10 @@ export class CouponService implements ICouponService {
       value: coupon.value,
       Reward: coupon.Reward
     };
+  }
+
+  private async getUsedCouponIds(): Promise<number[]> {
+    const usedCoupons = await this.playerCouponRepository.find({ relations: ['coupon'] });
+    return usedCoupons.map(pc => pc?.coupon?.id || 0);
   }
 }
